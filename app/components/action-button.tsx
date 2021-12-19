@@ -4,10 +4,16 @@ import { GiGamepadCross } from 'react-icons/gi';
 type Props = {
   positive?: boolean;
   negative?: boolean;
+  performingAction?: boolean;
   children: React.ReactNode;
 };
 
-export function ActionButton({ positive, negative, children }: Props) {
+export function ActionButton({
+  positive,
+  negative,
+  performingAction,
+  children,
+}: Props) {
   let classes =
     'py-3 px-6 text-white rounded-lg shadow-lg border self-end disabled:bg-gray-200 disabled:border-gray-800 disabled:text-gray-800';
   if (positive) {
@@ -17,8 +23,6 @@ export function ActionButton({ positive, negative, children }: Props) {
   } else {
     classes += ' bg-blue-400 border-blue-400 w-full';
   }
-
-  const performingAction = false;
 
   return (
     <button type="submit" className={classes}>

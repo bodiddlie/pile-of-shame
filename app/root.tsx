@@ -40,7 +40,7 @@ export default function App() {
               <span>Pile of Shame</span>
             </div>
             {data.email ? (
-              <Form action="/logout" method="post">
+              <Form action="/logout" method="post" className="self-center">
                 <button type="submit">Logout</button>
               </Form>
             ) : null}

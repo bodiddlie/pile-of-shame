@@ -1,4 +1,4 @@
-import aws, { AWSError } from 'aws-sdk';
+import aws from 'aws-sdk';
 aws.config.update({ region: 'us-east-1' });
 const dynamo = new aws.DynamoDB.DocumentClient();
 
@@ -31,7 +31,7 @@ export async function saveUser(email: string) {
       SK: `PROFILE#${email}`,
       createdAt: timestamp,
       updatedAt: timestamp,
-      isSorted: false,
+      isSorted: 'list',
     },
   };
 
@@ -92,7 +92,25 @@ export async function getPile(email: string) {
   }
 }
 
-export async function addGame(email, id, title, boxArt, description) {
+export async function addGame(
+  email: string,
+  id: string,
+  title: string,
+  boxArt: string,
+  description: string,
+) {
+  let user = await getUser(email);
+  let sortOrder = null;
+  if (user && user.isSorted === 'focus') {
+    let pile = (await getPile(email)) || [];
+    let sorted = pile
+      .filter((p) => typeof p.sortOrder === 'number' && p.sortOrder !== 1)
+      .sort((first, second) => first.sortOrder - second.sortOrder)
+      .reverse();
+    if (sorted.length > 0) {
+      sortOrder = sorted[0].sortOrder + 1;
+    }
+  }
   const timestamp = new Date().getTime();
 
   const params = {
@@ -105,7 +123,7 @@ export async function addGame(email, id, title, boxArt, description) {
       updatedAt: timestamp,
       title,
       completed: false,
-      sortOrder: null,
+      sortOrder,
       boxArt,
       description,
     },
@@ -115,7 +133,7 @@ export async function addGame(email, id, title, boxArt, description) {
     await dynamo.put(params).promise();
     const { PK, SK, createdAt, updatedAt, ...game } = params.Item;
     return game;
-  } catch (err) {
+  } catch (err: any) {
     console.error(`Failure: ${err.message}`);
     throw err;
   }
@@ -142,7 +160,7 @@ export async function removeGame(email: string, id: string) {
 export async function updateSortOrder(
   email: string,
   id: string,
-  sortOrder: string | number,
+  sortOrder: string | number | null,
 ) {
   const params = {
     TableName,
@@ -166,21 +184,62 @@ export async function updateSortOrder(
   }
 }
 
-async function getGameCount(email: string) {
+export async function getNextGameInList(email: string) {
+  try {
+    const result = (await getPile(email)) || [];
+    const sorted = result.sort((a, b) => a.sortOrder - b.sortOrder);
+    if (sorted.length > 0) {
+      return sorted[0];
+    }
+  } catch (err: any) {
+    console.error(`Error while querying for top game: ${err.message}`);
+    throw err;
+  }
+  return null;
+}
+
+export async function completeGame(email: string, id: string) {
   const params = {
     TableName,
-    KeyConditionExpression: 'PK = :userId and begins_with(SK, :game)',
-    ExpressionAttributeValues: {
-      ':userId': `USER#${email}`,
-      ':game': 'GAME#',
+    Key: {
+      PK: `USER#${email}`,
+      SK: `GAME#${id}`,
     },
+    UpdateExpression: 'SET completed = :completed',
+    ExpressionAttributeValues: {
+      ':completed': true,
+    },
+    ReturnValues: 'ALL_NEW',
   };
 
   try {
-    const result = await dynamo.query(params).promise();
-    return result.Items?.length;
-  } catch (err) {
-    console.error(`Error while querying for list length: ${err.message}`);
-    return 0;
+    await dynamo.update(params).promise();
+    return;
+  } catch (err: any) {
+    console.error(`Failure while completing game ${id}: ${err}`);
+    throw err;
+  }
+}
+
+export async function updateProfile(email: string, isSorted: string) {
+  const params = {
+    TableName,
+    Key: {
+      PK: `USER#${email}`,
+      SK: `PROFILE#${email}`,
+    },
+    UpdateExpression: 'SET isSorted = :isSorted',
+    ExpressionAttributeValues: {
+      ':isSorted': isSorted,
+    },
+  };
+  await dynamo.update(params).promise();
+}
+
+export async function resetSortOrder(email: string) {
+  let pile = (await getPile(email)) || [];
+
+  for (let game of pile) {
+    await updateSortOrder(email, game.id, null);
   }
 }

@@ -1,17 +1,19 @@
 import * as React from 'react';
-import { MdClear, MdSearch } from 'react-icons/md';
+import { MdSearch } from 'react-icons/md';
 import {
   ActionFunction,
   Form,
+  Link,
   LoaderFunction,
-  redirect,
   useLoaderData,
+  useTransition,
 } from 'remix';
 import { GameCard } from '../components/game-card';
 import { requireUserEmail } from '../util/session.server';
 import { addGame, getPile, removeGame } from '../util/dynamo.server';
 import { ActionButton } from '../components/action-button';
 import { Game } from '../types';
+import { GiGamepadCross } from 'react-icons/gi';
 
 export let loader: LoaderFunction = async ({ request }) => {
   const email = await requireUserEmail(request);
@@ -30,14 +32,12 @@ export let action: ActionFunction = async ({ request }) => {
 
   const formData = await request.formData();
   const actionType = formData.get('actionType');
-  // let search = formData.get('search');
 
   if (actionType === 'add') {
-    // add game to pile
-    let id = formData.get('id');
-    let title = formData.get('title');
-    let boxArt = formData.get('boxArt');
-    let description = formData.get('description');
+    let id = formData.get('id') as string;
+    let title = formData.get('title') as string;
+    let boxArt = formData.get('boxArt') as string;
+    let description = formData.get('description') as string;
 
     try {
       await addGame(email, id, title, boxArt, description);
@@ -94,8 +94,26 @@ async function searchGames(email: string, search: string) {
 
 export default function Search() {
   const data = useLoaderData();
+  const transition = useTransition();
+  const actionType = transition?.submission?.formData.get('actionType');
+  const gameId = transition?.submission?.formData.get('id');
+
+  console.log(gameId);
   return (
-    <React.Fragment>
+    <div className="flex flex-col flex-grow">
+      <Link
+        to="/list"
+        className="m-1 p-2 bg-green-400 rounded border border-gray-800 text-gray-800 text-center"
+      >
+        {transition.state === 'loading' &&
+        transition.location.pathname === '/list' ? (
+          <span className="text-2xl fast-spin inline-block">
+            <GiGamepadCross />
+          </span>
+        ) : (
+          <span>Back to List</span>
+        )}
+      </Link>
       <Form method="get" action="/search" className="flex pr-2">
         <div className="flex bg-white flex-1">
           <input
@@ -103,18 +121,20 @@ export default function Search() {
             name="search"
             className="flex-1 p-1 rounded-none bg-white appearance-none"
             placeholder="Find a game..."
+            defaultValue={data.search}
           />
-          <button
-            type="button"
-            className="w-10 flex justify-center items-center text-2xl"
-          >
-            <MdClear />
-          </button>
+          <input type="hidden" name="actionType" value="search" />
           <button
             type="submit"
             className="w-10 flex justify-center items-center text-2xl"
           >
-            <MdSearch />
+            {actionType === 'search' ? (
+              <span className="text-2xl fast-spin inline-block">
+                <GiGamepadCross />
+              </span>
+            ) : (
+              <MdSearch />
+            )}
           </button>
         </div>
       </Form>
@@ -124,18 +144,28 @@ export default function Search() {
             <GameCard key={g.id} game={g}>
               {g.isInPile ? (
                 <GameForm game={g} actionType="delete" search={data.search}>
-                  <ActionButton negative>Remove</ActionButton>
+                  <ActionButton negative performingAction={gameId == g.id}>
+                    Remove
+                  </ActionButton>
                 </GameForm>
               ) : (
                 <GameForm game={g} actionType="add" search={data.search}>
-                  <ActionButton positive>Add</ActionButton>
+                  <ActionButton positive performingAction={gameId == g.id}>
+                    Add
+                  </ActionButton>
                 </GameForm>
               )}
             </GameCard>
           ))}
         </div>
-      ) : null}
-    </React.Fragment>
+      ) : (
+        <div className="flex-grow flex flex-col justify-center items-center">
+          <h3 className="text-gray-800 border border-gray-800 bg-yellow-200 p-2 rounded-2xl m-2">
+            No search results found try changing your search terms.
+          </h3>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -158,7 +188,6 @@ function GameForm({ game, actionType, search, children }: Props) {
       <input type="hidden" name="title" value={game.title} />
       <input type="hidden" name="description" value={game.description} />
       <input type="hidden" name="boxArt" value={game.boxArt} />
-      {/*<input type="hidden" name="search" value={search} />*/}
       {children}
     </Form>
   );
