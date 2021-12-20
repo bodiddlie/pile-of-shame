@@ -21,9 +21,7 @@ export let action: ActionFunction = async ({ request }) => {
     const stringToEncrypt = JSON.stringify([email, expirationDateTime]);
     const encryptedString = encrypt(stringToEncrypt);
 
-    console.log(`http://localhost:3000/magic?magicWord=${encryptedString}`);
-
-    // await sendEmail(encryptedString, email);
+    await sendEmail(encryptedString, email);
     return { email };
   } catch (err: any) {
     console.error(`Failed to create a magic link: ${err.message}`);
