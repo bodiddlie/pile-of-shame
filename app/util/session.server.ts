@@ -1,6 +1,6 @@
 import { redirect } from 'remix';
 
-import { destroySession, getSession } from '../session';
+import { destroySession, getSession } from '~/session';
 import { getUserSession } from './dynamo.server';
 
 export async function requireUserEmail(request: Request) {
@@ -25,7 +25,17 @@ export async function requireUserEmail(request: Request) {
 export async function getUserEmail(request: Request) {
   const session = await getSession(request.headers.get('Cookie'));
 
+  if (!session.has('email') || !session.has('sessionId')) {
+    return null;
+  }
+
   const email = session.get('email');
+  const sessionId = session.get('sessionId');
+  const userSession = await getUserSession(email, sessionId);
+
+  if (!userSession) {
+    return null;
+  }
 
   return email;
 }

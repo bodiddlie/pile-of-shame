@@ -1,5 +1,6 @@
 import type { MetaFunction, LoaderFunction } from 'remix';
-import { useLoaderData, json, Link } from 'remix';
+import { Link, redirect } from 'remix';
+import { getUserEmail } from '~/util/session.server';
 
 export let meta: MetaFunction = () => {
   return {
@@ -8,9 +9,14 @@ export let meta: MetaFunction = () => {
   };
 };
 
-export default function Index() {
-  // let data = useLoaderData<IndexData>();
+export let loader: LoaderFunction = async ({ request }) => {
+  let email = await getUserEmail(request);
+  if (email) return redirect('/list');
+  return null;
+};
 
+export default function Index() {
+  console.log('hi');
   return (
     <div className="flex flex-col p-2">
       <p className="mb-4 italic font-bold">
