@@ -1,8 +1,8 @@
 import * as React from 'react';
 import { Form } from '@remix-run/react';
 import { ActionFunction, useActionData } from 'remix';
-import { sendEmail } from '../util/email';
-import { encrypt } from '../util/crypto';
+import { sendEmail } from '../util/email.server';
+import { encrypt } from '../util/crypto.server';
 
 const linkExpirationTime = 1000 * 60 * 30;
 

@@ -6,3 +6,6 @@ node_modules
 /app/tailwind.css
 /.idea
 .env
+netlify/functions/server/build/*
+/.netlify
+**/.DS_Store

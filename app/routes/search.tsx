@@ -98,7 +98,6 @@ export default function Search() {
   const actionType = transition?.submission?.formData.get('actionType');
   const gameId = transition?.submission?.formData.get('id');
 
-  console.log(gameId);
   return (
     <div className="flex flex-col flex-grow">
       <Link

@@ -1,7 +1,5 @@
 import { redirect } from 'remix';
-import { decrypt } from './crypto';
-import jwt from 'jsonwebtoken';
-import { getUserSession } from './dynamo.server';
+import { decrypt } from './crypto.server';
 
 export type TokenPayload = {
   email: string;
@@ -49,8 +47,4 @@ function parseTokenFromUrl(urlString: string): string | null {
     console.error(err);
     throw redirect('/login');
   }
-}
-
-export function validateToken(token: string): TokenPayload {
-  return jwt.verify(token, 'tokensecret') as TokenPayload;
 }
