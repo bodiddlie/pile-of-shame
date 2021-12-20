@@ -6,7 +6,7 @@ aws.config.update({
 });
 const dynamo = new aws.DynamoDB.DocumentClient();
 
-const TableName = 'pile-of-shame-focus-dev';
+const TableName = 'pile-of-shame-remix';
 
 export async function getUser(email: string) {
   const params = {
