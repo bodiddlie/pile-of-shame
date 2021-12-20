@@ -1,8 +1,8 @@
 import aws from 'aws-sdk';
 aws.config.update({
   region: 'us-east-1',
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  accessKeyId: process.env.NPK_ACCESS_KEY_ID,
+  secretAccessKey: process.env.NPK_SECRET_ACCESS_KEY,
 });
 const dynamo = new aws.DynamoDB.DocumentClient();
 
