@@ -1,4 +1,6 @@
 import aws from 'aws-sdk';
+import * as Sentry from '@sentry/node';
+
 aws.config.update({
   region: 'us-east-1',
   accessKeyId: process.env.NPK_ACCESS_KEY_ID,
@@ -21,11 +23,13 @@ export async function getUser(email: string) {
     const result = await dynamo.get(params).promise();
     return result.Item;
   } catch (err) {
-    console.error(err);
+    console.error('Error occurred while getting user.');
+    Sentry.captureException(err);
     return null;
   }
 }
 
+// TODO: start here, what do we need to do when an exception happens here?
 export async function saveUser(email: string) {
   const timestamp = new Date().toISOString();
   const params = {
@@ -70,7 +74,8 @@ export async function getUserSession(email: string, sessionId: string) {
     const result = await dynamo.get(params).promise();
     return result.Item;
   } catch (err) {
-    console.error(err);
+    console.error('Error retrieving user session.');
+    Sentry.captureException(err);
     return null;
   }
 }
@@ -92,6 +97,7 @@ export async function getPile(email: string) {
     return result.Items;
   } catch (err: any) {
     console.error(`Error while querying for game list: ${err.message}`);
+    Sentry.captureException(err);
     throw err;
   }
 }
@@ -138,7 +144,8 @@ export async function addGame(
     const { PK, SK, createdAt, updatedAt, ...game } = params.Item;
     return game;
   } catch (err: any) {
-    console.error(`Failure: ${err.message}`);
+    console.error(`Failure to add game: ${err.message}`);
+    Sentry.captureException(err);
     throw err;
   }
 }
@@ -157,6 +164,7 @@ export async function removeGame(email: string, id: string) {
     return;
   } catch (err) {
     console.error(`Failure while deleting game id: ${id}`);
+    Sentry.captureException(err);
     throw err;
   }
 }
@@ -184,6 +192,7 @@ export async function updateSortOrder(
     return;
   } catch (err) {
     console.error(`Failure while updating sort order for game id: ${id}`);
+    Sentry.captureException(err);
     throw err;
   }
 }
@@ -197,6 +206,7 @@ export async function getNextGameInList(email: string) {
     }
   } catch (err: any) {
     console.error(`Error while querying for top game: ${err.message}`);
+    Sentry.captureException(err);
     throw err;
   }
   return null;
@@ -221,6 +231,7 @@ export async function completeGame(email: string, id: string) {
     return;
   } catch (err: any) {
     console.error(`Failure while completing game ${id}: ${err}`);
+    Sentry.captureException(err);
     throw err;
   }
 }

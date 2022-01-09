@@ -1,7 +1,23 @@
-const path = require("path");
-const { createRequestHandler } = require("@remix-run/netlify");
+const path = require('path');
+const { createRequestHandler } = require('@remix-run/netlify');
+const Sentry = require('@sentry/node');
+// or use es6 import statements
+// import * as Sentry from '@sentry/node';
 
-const BUILD_DIR = path.join(process.cwd(), "netlify");
+const Tracing = require('@sentry/tracing');
+// or use es6 import statements
+// import * as Tracing from '@sentry/tracing';
+
+Sentry.init({
+  dsn: 'https://f0ef2c7b935d4ec4a22d7c2443b407d1@o1109711.ingest.sentry.io/6138262',
+
+  // Set tracesSampleRate to 1.0 to capture 100%
+  // of transactions for performance monitoring.
+  // We recommend adjusting this value in production
+  tracesSampleRate: 1.0,
+});
+
+const BUILD_DIR = path.join(process.cwd(), 'netlify');
 
 function purgeRequireCache() {
   // purge require cache on requests for "server side HMR" this won't let
@@ -17,12 +33,12 @@ function purgeRequireCache() {
 }
 
 exports.handler =
-  process.env.NODE_ENV === "production"
-    ? createRequestHandler({ build: require("./build") })
+  process.env.NODE_ENV === 'production'
+    ? createRequestHandler({ build: require('./build') })
     : (event, context) => {
         purgeRequireCache();
-        return createRequestHandler({ build: require("./build") })(
+        return createRequestHandler({ build: require('./build') })(
           event,
-          context
+          context,
         );
       };

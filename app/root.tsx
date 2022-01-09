@@ -7,12 +7,13 @@ import {
   useCatch,
   useLoaderData,
 } from 'remix';
+import * as React from 'react';
+import { Form } from '@remix-run/react';
 
 import styles from './tailwind.css';
 import { GiGamepadCross } from 'react-icons/gi';
 import { getUserEmail } from './util/session.server';
-import { Form } from '@remix-run/react';
-import * as React from 'react';
+import { logError } from '~/util/logging.server';
 
 export function links() {
   return [{ rel: 'stylesheet', href: styles }];
@@ -57,6 +58,7 @@ export default function App() {
 }
 
 export function ErrorBoundary({ error }: { error: Error }) {
+  logError(error);
   return (
     <html lang="en">
       <head>

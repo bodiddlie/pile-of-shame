@@ -1,4 +1,5 @@
-const aws = require('aws-sdk');
+import aws from 'aws-sdk';
+import Sentry from '@sentry/node';
 
 const ses = new aws.SES({ region: 'us-east-1' });
 
@@ -28,6 +29,7 @@ export async function sendEmail(magicLink: String, email: String) {
     return;
   } catch (err: any) {
     console.error(`Failed to send email: ${err.message}`);
+    Sentry.captureException(err);
     throw err;
   }
 }
